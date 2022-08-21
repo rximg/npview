@@ -10,9 +10,15 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@antv/g2plot": "^2.4.20",
+    "@vueuse/core": "^9.1.0",
     "mathjax": "^3.2.2",
     "ndarray": "^1.0.19",
+    "ndarray-imshow": "^1.0.1",
+    "ndarray-ops": "^1.2.2",
+    "ndarray-unsqueeze": "^1.0.3",
     "npyjs": "^0.4.0",
+    "save-pixels": "^2.3.6",
     "vue": "^3.2.37",
     "vue-mathjax": "^0.1.1",
     "vue-mathjax-next": "^0.0.4"

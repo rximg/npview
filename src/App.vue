@@ -5,32 +5,32 @@
   </header>
 
   <main>
-    <!-- <textarea v-model="formula" /> -->
     hello:
-
-    <!-- <NDArray /> -->
+    <template v-if="dmat">
+      <NDArrayView :inputarr="dmat" style="{width: 200px;height: 200px;}"/>
+    </template>
   </main>
-  <!-- <vue-mathjax :formula="formula" />
-  <HelloWorld/> -->
-  <HelloWorld/>
+  <!-- <HelloWorld/> -->
 </template>
 
 <script setup lang="ts">
 // import { VueMathjax } from 'vue-mathjax-next'
 // import HelloWorld from './components/HelloWorld.vue'
 // import TheWelcome from './components/TheWelcome.vue'
-// import {NDArray} from './components/NDArray.vue'
+import NDArrayView from './components/NDArrayView.vue'
 import ndarray from 'ndarray'
-import {ref} from "vue"
+import {ref,shallowRef} from "vue"
 import npyjs from "npyjs";
 let n = new npyjs();
+const dmat = shallowRef(null)
 n.load("zero.npy", (array) => {
     // `array` is a one-dimensional array of the raw data
     // `shape` is a one-dimensional array that holds a numpy-style shape.
-    console.log(array.data)
+    // console.log(array.data)
     
-    var mat = ndarray(array.data, array.shape);
-    console.log(mat.get(0,1) );
+    dmat.value = ndarray(array.data, array.shape);
+    console.log('load npy:',dmat.value);
+
 // const formula = "$$x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}.$$"
 
 });
