@@ -1,15 +1,12 @@
 <template>
   <div ref="mainNDView" @mousewheel.prevent="scrollevent" :style="{width: '200px',height: '200px'}">
-    <template v-show="isImageShow">
+    <div v-show="isImageShow">
       <canvas ref="imageShowHandle" />
-    </template>
-    <template v-show="!isImageShow">
+    </div>
+    <div v-show="!isImageShow">
       <div ref="pixShowHandle"></div>
-    </template>
+    </div>
     <div>
-      <!-- <span v-for="(axis, index) in ndaxis" :key="index">
-        <input v-model="axis" />
-      </span> -->
     </div>
   </div>
 

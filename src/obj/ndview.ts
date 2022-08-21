@@ -50,6 +50,8 @@ export class NdView implements NdViewInterface {
   constructor(store: ndarray, canvasSize: Size, minPixSize: number = 8) {
     this.store = store;
     this.canvasSize = canvasSize;
+    
+    console.log('init store size',store.width,store.height)
     this.ndcenter = { x: store.width / 2, y: store.height / 2 }
     this.ndregion = { width: store.width, height: store.height }
     //根据store修改ndaxis
@@ -69,14 +71,20 @@ export class NdView implements NdViewInterface {
     const length = nd.shape.length
     const shape = nd.shape
     const dtype = nd.dtype
+    var width = 0
+    var height =0
     if (length < 2) {
       throw new Error(`unsupport ndarray with shape ${shape}`)
     } else if (length == 2) {
       if (dtype == "uint8") {
         this.channelMode = "GRAY"
+  
       } else {
         this.channelMode = "GRAY_HEATMAP"
       }
+      height = shape[0]
+      width=shape[1]
+
     }
     else if (nd.shape.length == 3) {
       if (dtype == "uint8" && nd.shape[2]==3) {
@@ -85,11 +93,15 @@ export class NdView implements NdViewInterface {
         this.channelMode = "HWC"
         this.ndaxis.push({ name: "c", value: 0 })
       }
+      height = shape[0]
+      width=shape[1]
     }
     else if (nd.shape.length == 4) {
       this.channelMode = "BCHW"
       this.ndaxis.push({ name: "c", value: 0 })
       this.ndaxis.push({ name: "b", value: 0 })
+      height = shape[2]
+      width=shape[3]
     }
     else {
       this.channelMode = "XCHW"
@@ -97,9 +109,12 @@ export class NdView implements NdViewInterface {
       for (var i = 0; i < num; i++) {
         this.ndaxis.push({ name: `c_${i}`, value: i })
       }
+      height = shape[2]
+      width=shape[3]
     }
     console.log(`nd info ${shape} ${dtype} ${this.channelMode}`)
-
+    this.ndregion = { width: width, height: height }
+    this.ndcenter = {x:width/2,y:height/2}
   }
 
   getAspect():ndarray{
@@ -107,6 +122,7 @@ export class NdView implements NdViewInterface {
     const end_x = this.ndcenter.x + this.ndregion.width / 2;
     const start_y = this.ndcenter.y - this.ndregion.height / 2;
     const end_y = this.ndcenter.y + this.ndregion.height / 2; 
+    // console.log('start end',start_x,start_y,end_x,end_y)
     if (this.channelMode == "GRAY" || this.channelMode=="GRAY_HEATMAP"){
       return this.store.lo(start_x,start_y).hi(end_x,end_y)
     }else if(this.channelMode == "RGB"){
@@ -131,8 +147,8 @@ export class NdView implements NdViewInterface {
     console.log('el size',elwidth,elheight)
     var imageData = context.getImageData(0, 0, elwidth, elheight)
     var data = imageData.data
-    data = handleData(this.store, data)
-    console.log('data',this.store,data)
+    data = handleData(this.getAspect(), data)
+    console.log('data',this.getAspect(),data)
     context.putImageData(imageData, 0, 0)
   }
   viewAsPix(heatmapplot:Heatmap) {
