@@ -26,7 +26,7 @@ const dmat = shallowRef(null)
 n.load("zero.npy", (array) => {
     // `array` is a one-dimensional array of the raw data
     // `shape` is a one-dimensional array that holds a numpy-style shape.
-    // console.log(array.data)
+    console.log(array.data)
     
     dmat.value = ndarray(array.data, array.shape);
     console.log('load npy:',dmat.value);
