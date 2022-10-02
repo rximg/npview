@@ -9,23 +9,39 @@ interface Size {
   width: number;
   height: number;
 }
-
+type HeatMapValue = {
+  x:string
+  y:string
+  value:any
+}
 interface Point {
   x: number;
   y: number;
 }
 
+interface ImageSize {
+  imgX:number;
+  imgY:number;
+  imgScale: number;
+}
+
+interface ImageEl {
+  imel:HTMLCanvasElement
+  imwidth:number
+  imheight:number
+}
+
 interface NdViewInterface {
 
   store: ndarray;
-  canvasSize: Size;
+  // canvasSize: Size;
   ndcenter: Point;
   ndregion: Size;
   ndaxis: AxisType[];
   minPixSize: number;
   viewAsImage(imageShowHandle: HTMLCanvasElement): any;
   viewAsPix(heatmapplot: Heatmap): any;
-  setMousePoint(point: Point): void;
+  // setMousePoint(point: Point): void;
   setScroll(move: number): void;
   setAxis(axis: AxisType[]): void
 
@@ -39,20 +55,20 @@ type AxisType = {
 export class NdView implements NdViewInterface {
 
   store: ndarray;
-  canvasSize: Size;
+  // canvasSize: Size;
   ndcenter: Point;
   ndregion: Size;
   ndaxis: AxisType[];
   minPixSize: number;
   canvas:HTMLCanvasElement;
   context:CanvasRenderingContext2D;
+  imageSize:ImageSize;
+  imageEl:ImageEl;
   oritentMode: "H" | "V" = "H";
   channelMode: "LINE" | "GRAY" | "GRAY_HEATMAP" | "RGB" | "HWC" | "BCHW" | "XCHW" = "RGB";
 
-  constructor(store: ndarray, canvasSize: Size, minPixSize: number = 8,canvas:HTMLCanvasElement) {
+  constructor(store: ndarray, minPixSize: number = 8,canvas:HTMLCanvasElement) {
     this.store = store;
-    this.canvasSize = canvasSize;
-
     console.log('init store size', store.width, store.height,canvas)
     this.ndcenter = { x: store.width / 2, y: store.height / 2 }
     this.ndregion = { width: store.width, height: store.height }
@@ -62,11 +78,15 @@ export class NdView implements NdViewInterface {
     this.minPixSize = minPixSize;
     this.canvas = canvas
     this.context = canvas.getContext('2d')
+    this.imageEl = this.getImageElement(this.getAspect(),this.context)
     this.imageSize = {
       imgX: 0,
       imgY: 0,
       imgScale: 1
     }
+    // this.canvasInfo = {
+    //   mousePos :{x:0,y:0},
+    // }
   }
 
   preprocessND(nd: ndarray): ndarray {
@@ -131,11 +151,11 @@ export class NdView implements NdViewInterface {
     const end_x = this.ndcenter.x + this.ndregion.width / 2;
     const start_y = this.ndcenter.y - this.ndregion.height / 2;
     const end_y = this.ndcenter.y + this.ndregion.height / 2;
-    // console.log('start end',start_x,start_y,end_x,end_y)
+    console.log('start end',start_x,start_y,end_x,end_y)
     if (this.channelMode == "GRAY" || this.channelMode == "GRAY_HEATMAP") {
       return this.store.lo(start_x, start_y).hi(end_x, end_y)
     } else if (this.channelMode == "RGB") {
-      return this.store.lo(start_x, start_y).hi(end_x, end_y)
+      return this.store.hi(end_x, end_y).lo(start_x, start_y).pick(null, null, 0)
     } else if (this.channelMode == "HWC") {
       return this.store.lo(start_x, start_y).hi(end_x, end_y).pick(null, null, this.ndaxis[0].value)
     } else if (this.channelMode == "BCHW") {
@@ -158,61 +178,88 @@ export class NdView implements NdViewInterface {
 
   // }
 
-  drawImage() {
-    // this.context = this.canvas.getContext('2d')
-    const { width: elwidth, height: elheight } = this.canvasSize
-    
-    var imageData = this.context.getImageData(0, 0, elwidth, elheight)
-    var data = imageData.data
-    data = handleData(this.getAspect(), data)
-    console.log('data', this.imageSize)
-    // const pix = savePixels(this.getAspect())
-    // this.context.putImageData(imageData, 0, 0)
+  getImageElement(aspect:ndarray,context:CanvasRenderingContext2D){
+    // const aspect = this.getAspect()
+    const imwidth = aspect.shape[0]
+    const imheight = aspect.shape[1]
+    var imageData = context.getImageData(0, 0, imwidth, imheight)
+    assignDataToImagedata(aspect, imageData.data)
     const tempCanvas = document.createElement('canvas') as HTMLCanvasElement;
     const tempContext = tempCanvas.getContext('2d') as CanvasRenderingContext2D;
-    tempCanvas.width = elwidth;
-    tempCanvas.height = elheight;
-
-    // const tempScaleData = ctx.getImageData(0, 0, WIDTH, HEIGHT);
+    tempCanvas.width = imwidth;
+    tempCanvas.height = imheight;
     tempContext.putImageData(imageData, 0, 0);
+    return {
+      imel:tempCanvas,
+      imwidth:imwidth,
+      imheight:imheight
+    }
+  }
+
+  drawImage() {
+    //图片坐标相关的东西都合并到一个object里面去。
+    //初始化canvas宽高
+    // batch
+    // this.context = this.canvas.getContext('2d')
+    // const { width: elwidth, height: elheight } = this.canvas
+    
+    const {imel,imwidth,imheight} = this.imageEl
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    console.log('drawImage',imel,imwidth,imheight,this.imageSize)
     this.context.drawImage(
-      tempCanvas, //规定要使用的图像、画布或视频。
+      imel, //规定要使用的图像、画布或视频。
       0, 0, //开始剪切的 x 坐标位置。
-      imageData.width, imageData.height,  //被剪切图像的高度。
+      imwidth, imheight,  //被剪切图像的高度。
       this.imageSize.imgX, this.imageSize.imgY,//在画布上放置图像的 x 、y坐标位置。
-      imageData.width * this.imageSize.imgScale, imageData.height * this.imageSize.imgScale  //要使用的图像的宽度、高度
+      imwidth * this.imageSize.imgScale, imheight * this.imageSize.imgScale  //要使用的图像的宽度、高度
     );
   }
   viewAsPix(heatmapplot: Heatmap) {
-    const data = {}//iter ndarray
-    // this.getAspect().
 
+    const data:HeatMapValue[] = []//iter ndarray
+    // this.getAspect().
+    const {imgX,imgY,imgScale} = this.imageSize;
+    const {imel,imwidth,imheight} = this.imageEl
+
+    this.ndregion = { width: imwidth/imgScale, height: imheight/imgScale }
+    this.ndcenter = { x: (-imgX+imwidth/2)/imgScale, y: (-imgY+imheight/2) / imgScale }
+    const ndarr = this.getAspect()
+    console.log('aspect:',this.channelMode,ndarr.shape,this.ndregion,this.ndcenter)
+    for (var i=0;i<ndarr.shape[0];i++){
+      for (var j=0;j<ndarr.shape[1];j++){
+        data.push({
+          x:i.toString(),
+          y:j.toString(),
+          value:ndarr.get(i,j)
+        })
+      }
+    }
+    // console.log('heat map data',data)
     heatmapplot.update({ data: data })
+    heatmapplot.render()
   }
-  setMousePoint(point: Point) {
-    const { x, y } = point
-    this.ndcenter.x = Math.floor((x / this.canvasSize.width) * this.store.width);
-    this.ndcenter.y = Math.floor((y / this.canvasSize.height) * this.store.height);
-    // this.ndcenter = point;
-  }
-  setScroll(move: number) {
-    //TODO 缩放需要有范围
-    //TODO 什么情况下由 canvas switch到 g2plot
-    //是否要设置mod，是H,还是V。
-    this.ndregion.width += move;
-    this.ndregion.height += move;
-  }
-  setAxis(axis: AxisType[]): void {
-    this.ndaxis = axis
-  }
+  // setMousePoint(point: Point) {
+  //   const { x, y } = point
+  //   this.ndcenter.x = Math.floor((x / this.canvasSize.width) * this.store.width);
+  //   this.ndcenter.y = Math.floor((y / this.canvasSize.height) * this.store.height);
+  //   // this.ndcenter = point;
+  // }
+  // setScroll(move: number) {
+  //   //TODO 缩放需要有范围
+  //   //TODO 什么情况下由 canvas switch到 g2plot
+  //   //是否要设置mod，是H,还是V。
+  //   this.ndregion.width += move;
+  //   this.ndregion.height += move;
+  // }
+  // setAxis(axis: AxisType[]): void {
+  //   this.ndaxis = axis
+  // }
 }
 
 
-export function handleData(array, data, frame?): any {
-  var i, j, ptr = 0, c
-
+export function assignDataToImagedata(array, data, frame?): any {
   if (array.shape.length === 4) {
-    return handleData(array.pick(frame), data, 0)
+    return assignDataToImagedata(array.pick(frame), data, 0)
   } else if (array.shape.length === 3) {
     if (array.shape[2] === 3) {
       ops.assign(

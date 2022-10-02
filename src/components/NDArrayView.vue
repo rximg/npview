@@ -1,9 +1,8 @@
 <template>
-  <div ref="mainNDView" @mousewheel.prevent="scrollevent" @mousedown="onmousedown" @mouseup="onmouseup"
-    :style="{ width: '200px', height: '200px' }">
-      <canvas ref="imageShowHandle" />
-    <!-- <div v-show="isImageShow"> -->
-    <!-- </div> -->
+  <div ref="mainNDViewHandle" @mousewheel.prevent="scrollevent" @mousedown="onmousedown" @mouseup="onmouseup">
+    <div v-show="isImageShow">
+      <canvas class="main" ref="imageShowHandle" />
+    </div>
     <div v-show="!isImageShow">
       <div ref="pixShowHandle"></div>
     </div>
@@ -18,93 +17,79 @@
 import { reactive, onMounted, ref, type Ref } from "vue"
 import { NdView } from "../obj/ndview"
 import { Heatmap } from '@antv/g2plot'
-
+import _ from 'lodash'
 import { useElementSize } from '@vueuse/core'
-const props = defineProps(['inputarr'])
+const props = defineProps(['inputarr'])//TODO 传入的是inputarray，是否需要传入宽高
 // console.log('input data',props.inputarr)
+var heatmapPlot: Heatmap = null
 
 const imageShowHandle: Ref<HTMLCanvasElement> = ref(null)
 const pixShowHandle: Ref<HTMLElement> = ref(null)
 const mainNDViewHandle = ref(null)
 const isImageShow = ref(true)
 var ndview_ist: NdView = null
+const MINIMUM_SCALE: number = 0.2     // 最小缩放
+const MAX_SCALE: number = 16           // 最大缩放
+const MOVE_STEP: number = 50          // 移动步长
 const { width: elwidth, height: elheight } = useElementSize(mainNDViewHandle)
-// const ndaxis = reactive(ndview_ist.ndaxis)
-// const scrollevent = (event) => {
-//   console.log(event)
-//   var delta = 0
-//   if (!event) event = window.event
-//   if (event.wheelDelta) {
-//     delta = event.wheelDelta / 120
-//     if (window.opera) delta = -delta
-//   } else if (event.detail) {
-//     delta = -event.detail / 3
-//   }
-//   ndview_ist.setScroll(delta)
-//   ndview_ist.viewAsImage(imageShowHandle.value)
 
-// if (ndview_ist.ndregion.width>8){
-//   ndview_ist.viewAsImage(imageShowHandle.value)
-// }else{
-//   ndview_ist.viewAsPix(heatmapPlot)
-// }
-// }
-var canvas;
-var img,//图片对象
-  imgIsLoaded,//图片是否加载完成;
-  imgX = 0,
-  imgY = 0,
-  imgScale = 1;
-
-// function loadImg() {
-//   img = new Image();
-//   img.onload = function () {
-//     imgIsLoaded = true;
-//     ndview_ist.drawImage();
-//   }
-//   img.src = '../../Content/images/mayday.jpg';
-// }
-
-// function drawImage() {
-//   img = ndview_ist.getAspect()
-//   const context = imageShowHandle.value.getContext('2d');//画布显示二维图片
-//   context.clearRect(0, 0, imageShowHandle.value.width, imageShowHandle.value.height);
-//   context.drawImage(
-//     img, //规定要使用的图像、画布或视频。
-//     0, 0, //开始剪切的 x 坐标位置。
-//     img.width, img.height,  //被剪切图像的高度。
-//     imgX, imgY,//在画布上放置图像的 x 、y坐标位置。
-//     img.width * imgScale, img.height * imgScale  //要使用的图像的宽度、高度
-//   );
-// }
-const scrollevent = function (event) {    //滚轮放大缩小
-  var pos = windowToCanvas(event.clientX, event.clientY);
-  var wheelDelta = event.wheelDelta ? event.wheelDelta : (event.deltalY * (-40));  //获取当前鼠标的滚动情况
-  if (wheelDelta > 0) {
-    ndview_ist.imageSize.imgScale *= 2;
-    ndview_ist.imageSize.imgX = ndview_ist.imageSize.imgX * 2 - pos.x;
-    ndview_ist.imageSize.imgY = ndview_ist.imageSize.imgY * 2 - pos.y;
-  } else {
-    ndview_ist.imageSize.imgScale /= 2;
-    ndview_ist.imageSize.imgX = ndview_ist.imageSize.imgX * 0.5 - pos.x * 0.5;
-    ndview_ist.imageSize.imgY = ndview_ist.imageSize.imgY * 0.5 - pos.y * 0.5;
+console.log('el width height', elwidth, elheight)
+const scrollevent = function (e) {
+  const { clientX, clientY, wheelDelta } = e
+  const pos = windowToCanvas(clientX, clientY)
+  // 计算图片的位
+  var { imgX, imgY, imgScale } = ndview_ist.imageSize;
+  const newPos = { x: Number(((pos.x - imgX) / imgScale).toFixed(2)), y: Number(((pos.y - imgY) / imgScale).toFixed(2)) }
+  // 判断是放大还是缩小
+  if (wheelDelta > 0) { // 放大
+    imgScale += 0.5
+    if (imgScale >= MAX_SCALE) {
+      imgScale = MAX_SCALE
+    }
+  } else { // 缩小
+    imgScale -= 0.5
+    if (imgScale <= MINIMUM_SCALE) {
+      imgScale = MINIMUM_SCALE
+    }
   }
-  ndview_ist.drawImage();   //重新绘制图片
-};
+  // 计算图片的位置， 根据当前缩放比例，计算新的位置
+  imgX = (1 - imgScale) * newPos.x + (pos.x - newPos.x);
+  imgY = (1 - imgScale) * newPos.y + (pos.y - newPos.y);
+  ndview_ist.imageSize = { imgX, imgY, imgScale }
+  if (imgScale == MAX_SCALE) {
+    console.log("access max scale", imgScale, MAX_SCALE)
+    isImageShow.value = false
+    ndview_ist.viewAsPix(heatmapPlot);
+  } else {
+    isImageShow.value = true
+    ndview_ist.drawImage();
+  }
 
+}
 const onmousedown = function (event) {
   var pos = windowToCanvas(event.clientX, event.clientY);  //坐标转换，将窗口坐标转换成canvas的坐标
-
-  imageShowHandle.value.onmousemove = function (evt) {  //移动
+  imageShowHandle.value.onmousemove = _.throttle(function (evt) {  //移动
     imageShowHandle.value.style.cursor = 'move';
     var posl = windowToCanvas(evt.clientX, evt.clientY);
-    var x = posl.x - pos.x;
-    var y = posl.y - pos.y;
-    pos = posl;
-    ndview_ist.imageSize.imgX = x;
-    ndview_ist.imageSize.imgY = y;
+    console.log('on mouse move', pos, posl)
+    var xoffset = posl.x - pos.x
+    var yoffset = posl.y - pos.y
+    if (Math.abs(xoffset) > Math.abs(yoffset)) {
+      if (xoffset > 0) {
+        ndview_ist.imageSize.imgX += MOVE_STEP;
+      } else {
+        ndview_ist.imageSize.imgX -= MOVE_STEP;
+      }
+    }
+    else {
+      if (yoffset > 0) {
+        ndview_ist.imageSize.imgY += MOVE_STEP;
+      } else {
+        ndview_ist.imageSize.imgY -= MOVE_STEP;
+      }
+    }
     ndview_ist.drawImage();  //重新绘制图片
-  };
+  }, 500)
 }
 const onmouseup = function () {
   imageShowHandle.value.onmousemove = null;
@@ -120,26 +105,27 @@ function windowToCanvas(x, y) {
     y: y - box.top - (box.height - imageShowHandle.value.height) / 2
   };
 }
-var heatmapPlot = null
 onMounted(
   () => {
     // canvasEventsInit()
     //context = imageShowHandle.value.getContext('2d');//画布显示二维图片
-    ndview_ist = new NdView(props.inputarr, { width: 256, height: 256 },8,canvas=imageShowHandle.value)
+    ndview_ist = new NdView(props.inputarr, 8, imageShowHandle.value)
     // ndview_ist.viewAsImage();
     ndview_ist.drawImage()
+    const data = []
     //ndview_ist.viewAsImage(imageShowHandle.value)
     heatmapPlot = new Heatmap(
       pixShowHandle.value,
       {
+        data,
         xField: 'x',
         yField: 'y',
         xAxis: false,
         yAxis: false,
-        colorField: 'v',
+        colorField: 'value',
         color: ['#dddddd', '#9ec8e0', '#5fa4cd', '#2e7ab6', '#114d90'],
         tooltip: {
-          fields: ['x', 'y', 'v'],
+          fields: ['x', 'y', 'value'],
         },
         reflect: 'y',
         label: {
@@ -151,13 +137,13 @@ onMounted(
             fontSize: 8,
           },
         },
-        axis: false,
-        data: {},
         autoFit: false,
-        width: elwidth,
-        height: elheight,
-      }
+        width: elwidth.value,
+        height: elheight.value,
+      },
+
     )
+    console.log('onmouted', heatmapPlot)
     heatmapPlot.render()
   }
 )
@@ -166,3 +152,12 @@ onMounted(
 
 
 </script>
+
+<style>
+.main {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+</style>

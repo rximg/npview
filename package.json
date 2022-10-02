@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@antv/g2plot": "^2.4.20",
+    "@opd/g2plot-vue": "^3.6.4",
     "@vueuse/core": "^9.1.0",
+    "lodash": "^4.17.21",
     "mathjax": "^3.2.2",
     "ndarray": "^1.0.19",
     "ndarray-imshow": "^1.0.1",
