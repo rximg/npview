@@ -1,7 +1,7 @@
 <template>
   <div ref="mainNDViewHandle" @mousewheel.prevent="scrollevent" @mousedown="onmousedown" @mouseup="onmouseup">
     <div v-show="isImageShow">
-      <canvas class="main" ref="imageShowHandle" />
+      <canvas ref="imageShowHandle" />
     </div>
     <div v-show="!isImageShow">
       <div ref="pixShowHandle"></div>
@@ -14,12 +14,13 @@
 
 
 <script lang="ts" setup>
+//TODO  输入的宽高是反的
 import { reactive, onMounted, ref, type Ref } from "vue"
 import { NdView } from "../obj/ndview"
 import { Heatmap } from '@antv/g2plot'
 import _ from 'lodash'
 import { useElementSize } from '@vueuse/core'
-const props = defineProps(['inputarr'])//TODO 传入的是inputarray，是否需要传入宽高
+const props = defineProps(['inputarr','width','height'])//TODO 传入的是inputarray，是否需要传入宽高
 // console.log('input data',props.inputarr)
 var heatmapPlot: Heatmap = null
 
@@ -31,14 +32,16 @@ var ndview_ist: NdView = null
 const MINIMUM_SCALE: number = 0.2     // 最小缩放
 const MAX_SCALE: number = 16           // 最大缩放
 const MOVE_STEP: number = 50          // 移动步长
-const { width: elwidth, height: elheight } = useElementSize(mainNDViewHandle)
+// TODO 组件宽高和图片切片宽高
+// 作为 imgX，imgY 在scale的情况下有个范围
 
-console.log('el width height', elwidth, elheight)
+const elSize = {width:props.width,height:props.height}
+// console.log('el width height', elwidth, elheight)
 const scrollevent = function (e) {
   const { clientX, clientY, wheelDelta } = e
   const pos = windowToCanvas(clientX, clientY)
   // 计算图片的位
-  var { imgX, imgY, imgScale } = ndview_ist.imageSize;
+  var { imgX, imgY, imgScale } = ndview_ist.scaleShape;
   const newPos = { x: Number(((pos.x - imgX) / imgScale).toFixed(2)), y: Number(((pos.y - imgY) / imgScale).toFixed(2)) }
   // 判断是放大还是缩小
   if (wheelDelta > 0) { // 放大
@@ -55,7 +58,7 @@ const scrollevent = function (e) {
   // 计算图片的位置， 根据当前缩放比例，计算新的位置
   imgX = (1 - imgScale) * newPos.x + (pos.x - newPos.x);
   imgY = (1 - imgScale) * newPos.y + (pos.y - newPos.y);
-  ndview_ist.imageSize = { imgX, imgY, imgScale }
+  ndview_ist.scaleShape = { imgX, imgY, imgScale }
   if (imgScale == MAX_SCALE) {
     console.log("access max scale", imgScale, MAX_SCALE)
     isImageShow.value = false
@@ -76,16 +79,16 @@ const onmousedown = function (event) {
     var yoffset = posl.y - pos.y
     if (Math.abs(xoffset) > Math.abs(yoffset)) {
       if (xoffset > 0) {
-        ndview_ist.imageSize.imgX += MOVE_STEP;
+        ndview_ist.scaleShape.imgX += MOVE_STEP;
       } else {
-        ndview_ist.imageSize.imgX -= MOVE_STEP;
+        ndview_ist.scaleShape.imgX -= MOVE_STEP;
       }
     }
     else {
       if (yoffset > 0) {
-        ndview_ist.imageSize.imgY += MOVE_STEP;
+        ndview_ist.scaleShape.imgY += MOVE_STEP;
       } else {
-        ndview_ist.imageSize.imgY -= MOVE_STEP;
+        ndview_ist.scaleShape.imgY -= MOVE_STEP;
       }
     }
     ndview_ist.drawImage();  //重新绘制图片
@@ -109,11 +112,10 @@ onMounted(
   () => {
     // canvasEventsInit()
     //context = imageShowHandle.value.getContext('2d');//画布显示二维图片
-    ndview_ist = new NdView(props.inputarr, 8, imageShowHandle.value)
+    ndview_ist = new NdView(props.inputarr, elSize, imageShowHandle.value)
     // ndview_ist.viewAsImage();
     ndview_ist.drawImage()
     const data = []
-    //ndview_ist.viewAsImage(imageShowHandle.value)
     heatmapPlot = new Heatmap(
       pixShowHandle.value,
       {
@@ -123,7 +125,7 @@ onMounted(
         xAxis: false,
         yAxis: false,
         colorField: 'value',
-        color: ['#dddddd', '#9ec8e0', '#5fa4cd', '#2e7ab6', '#114d90'],
+        color: ['#174c83', '#7eb6d4', '#efefeb', '#efa759', '#9b4d16'],
         tooltip: {
           fields: ['x', 'y', 'value'],
         },
@@ -138,12 +140,11 @@ onMounted(
           },
         },
         autoFit: false,
-        width: elwidth.value,
-        height: elheight.value,
+        width: elSize.width,
+        height: elSize.height,
       },
 
     )
-    console.log('onmouted', heatmapPlot)
     heatmapPlot.render()
   }
 )
@@ -155,9 +156,7 @@ onMounted(
 
 <style>
 .main {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  position: relative;
+  width: 250px;
+  height: 250px;
 }
 </style>

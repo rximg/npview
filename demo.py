@@ -12,6 +12,8 @@ import numpy as np
 import cv2
 
 
-im = cv2.imread("C:/Users/kk/Desktop/textcarrc.jpg")
-
-np.save('text.npy',im)
+im = cv2.imread(r"C:\Users\kk\Desktop\12.png")
+im = cv2.cvtColor(im,cv2.COLOR_RGB2BGR)
+im = np.transpose(im,(1,0,2))
+print(im.shape)
+np.save('12.npy',im)
