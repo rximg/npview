@@ -3,7 +3,7 @@
 
   <!-- <main> -->
     <template v-if="dmat">
-      <NDArrayView :inputarr="dmat" :width="250" :height="250" />
+      <NDArrayView :inputarr="dmat" :width="550" :height="250" />
     </template>
   <!-- </main>/ -->
   <!-- <HelloWorld/> -->

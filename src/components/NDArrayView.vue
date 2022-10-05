@@ -19,7 +19,7 @@ import { reactive, onMounted, ref, type Ref } from "vue"
 import { NdView } from "../obj/ndview"
 import { Heatmap } from '@antv/g2plot'
 import _ from 'lodash'
-import { useElementSize } from '@vueuse/core'
+// import { useElementSize } from '@vueuse/core'
 const props = defineProps(['inputarr','width','height'])//TODO 传入的是inputarray，是否需要传入宽高
 // console.log('input data',props.inputarr)
 var heatmapPlot: Heatmap = null
@@ -60,7 +60,6 @@ const scrollevent = function (e) {
   imgY = (1 - imgScale) * newPos.y + (pos.y - newPos.y);
   ndview_ist.scaleShape = { imgX, imgY, imgScale }
   if (imgScale == MAX_SCALE) {
-    console.log("access max scale", imgScale, MAX_SCALE)
     isImageShow.value = false
     ndview_ist.viewAsPix(heatmapPlot);
   } else {
@@ -77,19 +76,39 @@ const onmousedown = function (event) {
     console.log('on mouse move', pos, posl)
     var xoffset = posl.x - pos.x
     var yoffset = posl.y - pos.y
+    var {imgScale,imgX,imgY} = ndview_ist.scaleShape
+    var xRangeStart = (imgScale-1)*elSize.width 
+    var yRangeStart = (imgScale-1)*elSize.height
     if (Math.abs(xoffset) > Math.abs(yoffset)) {
       if (xoffset > 0) {
-        ndview_ist.scaleShape.imgX += MOVE_STEP;
-      } else {
-        ndview_ist.scaleShape.imgX -= MOVE_STEP;
+        imgX += MOVE_STEP;
+        if (imgX>0){
+          imgX = 0
+        }
+      } else  {
+        imgX -= MOVE_STEP;
+        if (imgX<-xRangeStart){
+          imgX = -xRangeStart
+        }
       }
     }
     else {
       if (yoffset > 0) {
-        ndview_ist.scaleShape.imgY += MOVE_STEP;
+        imgY += MOVE_STEP;
+        if (imgY>0){
+          imgY=0
+        }
       } else {
-        ndview_ist.scaleShape.imgY -= MOVE_STEP;
+        imgY -= MOVE_STEP
+        if (imgY<-yRangeStart){
+          imgY = - yRangeStart
+        }
       }
+    }
+    ndview_ist.scaleShape = {
+      imgX:imgX,
+      imgY:imgY,
+      imgScale:imgScale
     }
     ndview_ist.drawImage();  //重新绘制图片
   }, 500)
@@ -155,8 +174,4 @@ onMounted(
 </script>
 
 <style>
-.main {
-  width: 250px;
-  height: 250px;
-}
 </style>

@@ -56,7 +56,7 @@ type AxisType = {
 }
 
 export class NdView implements NdViewInterface {
-
+// TODO 图片和canvas尺寸不一致会有bug
   store: ndarray;
   // canvasSize: Size;
   ndcenter: Point;
@@ -207,12 +207,6 @@ export class NdView implements NdViewInterface {
   }
 
   drawImage() {
-    //图片坐标相关的东西都合并到一个object里面去。
-    //初始化canvas宽高
-    // batch
-    // this.context = this.canvas.getContext('2d')
-    // const { width: elwidth, height: elheight } = this.canvas
-    
     const {imel,imwidth,imheight} = this.imageEl
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     console.log('drawImage',imel,imwidth,imheight,this.scaleShape)
