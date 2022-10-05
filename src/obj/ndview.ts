@@ -55,6 +55,13 @@ type AxisType = {
   value: number;
 }
 
+const MINSIZES = {
+  "DEFAULT":{
+    width: 32,
+    height: 32,
+  }
+}
+
 export class NdView implements NdViewInterface {
 // TODO 图片和canvas尺寸不一致会有bug
   store: ndarray;

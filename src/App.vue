@@ -3,7 +3,7 @@
 
   <!-- <main> -->
     <template v-if="dmat">
-      <NDArrayView :inputarr="dmat" :width="550" :height="250" />
+      <NDArrayPixView :inputarr="dmat" :width="550" :height="250" />
     </template>
   <!-- </main>/ -->
   <!-- <HelloWorld/> -->
@@ -24,14 +24,17 @@
 // import { VueMathjax } from 'vue-mathjax-next'
 // import HelloWorld from './components/HelloWorld.vue'
 // import TheWelcome from './components/TheWelcome.vue'
-import NDArrayView from './components/NDArrayView.vue'
+import NDArrayPixView from './components/NDArrayPixView.vue'
 import ndarray from 'ndarray'
 import {ref,shallowRef} from "vue"
 import npyjs from "npyjs";
 let n = new npyjs();
 const dmat = shallowRef(null)
 // n.load("zero.npy", (array) => {
-n.load("12.npy", (array) => {
+n.load("zero255.npy", (array) => {
+
+// n.load("12.npy", (array) => {
+  // n.load("text.npy", (array) => {
 
     // `array` is a one-dimensional array of the raw data
     // `shape` is a one-dimensional array that holds a numpy-style shape.

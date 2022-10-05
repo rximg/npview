@@ -2,10 +2,10 @@ import { createApp } from 'vue'
 import App from './App.vue'
 
 import './assets/main.css'
-import VueMathjax from 'vue-mathjax-next';
 const app = createApp(App)
-app.use(VueMathjax)
 import { HeatmapChart } from '@opd/g2plot-vue'
-
+import Antd from 'ant-design-vue';
+import 'ant-design-vue/dist/antd.css';
 app.use(HeatmapChart)
+app.use(Antd)
 app.mount('#app')

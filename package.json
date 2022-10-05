@@ -13,6 +13,7 @@
     "@antv/g2plot": "^2.4.20",
     "@opd/g2plot-vue": "^3.6.4",
     "@vueuse/core": "^9.1.0",
+    "ant-design-vue": "^3.2.12",
     "lodash": "^4.17.21",
     "mathjax": "^3.2.2",
     "ndarray": "^1.0.19",

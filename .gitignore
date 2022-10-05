@@ -29,3 +29,5 @@ coverage
 text.npy
 .gitignore
 package-lock.json
+src.zip
+package-lock.json
