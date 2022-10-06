@@ -1,9 +1,12 @@
 
 import ndarray from 'ndarray'
 // import ndarray-imshow from 'ndarray-imshow'
-// import * as ops from 'ndarray-ops'
+import * as zeros from 'zeros'
+import {resample} from './resample'
 import { Heatmap } from '@antv/g2plot'
-import {formatRGB,formatNumber,colorRGB,assignDataToImagedata} from './formats'
+import {assignDataToImagedata} from './formats'
+import {formatRGB,formatNumber,colorRGB} from './formats'
+import { context } from 'ant-design-vue/lib/vc-image/src/PreviewGroup'
 
 interface Size {
   width: number;
@@ -125,7 +128,7 @@ export class NdView {
       height = shape[2]
       width = shape[3]
     }
-    console.log(`nd info ${shape} ${dtype} ${this.channelMode}`)
+    console.log(`preprocessND ${shape} ${dtype} ${this.channelMode}`)
     // this.ndregion = { width: width, height: height }
     // this.ndcenter = { x: width / 2, y: height / 2 }
     this.ndregion = {
@@ -179,6 +182,65 @@ export class NdView {
       throw new Error(`unsupport channel mode ${this.channelMode}`)
     }
   }
+
+  getThumbnail(){
+    var aspect = null
+    if (this.channelMode == "GRAY" || this.channelMode == "GRAY_HEATMAP") {
+      aspect = this.store
+    } else if (this.channelMode == "RGB") {
+      aspect = this.store
+    } else if (this.channelMode == "HWC") {   
+      aspect = this.store.pick(null, null, this.ndaxis[0].value)
+    } else if (this.channelMode == "BCHW") {
+      aspect = this.store.pick(this.ndaxis[0].value, null, null, null)
+    } else if (this.channelMode == "XCHW") {
+      const axis = this.ndaxis.map(axis => axis.value)
+      aspect = this.store.pick(...axis)
+    } else {
+      throw new Error(`unsupport channel mode ${this.channelMode}`)
+    }
+    // var resize = zeros([this.elementSize.width, this.elementSize.height])
+    // resample(resize,aspect)
+    return aspect
+  }
+
+
+  getImageElement(aspect:ndarray,context:CanvasRenderingContext2D){
+    // const aspect = this.getAspect()
+    const imwidth = aspect.shape[0]
+    const imheight = aspect.shape[1]
+    var imageData = context.getImageData(0, 0, imwidth, imheight)
+    assignDataToImagedata(aspect, imageData.data)
+    const tempCanvas = document.createElement('canvas',) as HTMLCanvasElement;
+    tempCanvas.width = imwidth
+    tempCanvas.height = imheight
+
+    const tempContext = tempCanvas.getContext('2d') as CanvasRenderingContext2D;
+    
+    tempContext.putImageData(imageData, 0, 0);
+    console.log("temp",tempCanvas.width,tempCanvas.height,imageData)
+    return {
+      imel:tempCanvas,
+      imwidth:imwidth,
+      imheight:imheight
+    }
+  }
+
+  drawImage(canvas,elsize) {
+    canvas.width=elsize.width
+    canvas.height=elsize.height
+    const context = canvas.getContext('2d')
+    const {imel,imwidth,imheight} = this.getImageElement(this.getAspect(),context)
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    // console.log('drawImage',imel,imwidth,imheight,this.scaleShape)
+    //https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage
+    context.drawImage(
+      imel, //规定要使用的图像、画布或视频。
+      0,0,//在画布上放置图像的 x 、y坐标位置。
+      elsize.width, imheight * elsize.height  //要使用的图像的宽度、高度
+    );
+  }
+
 
   viewAsPix(heatmapplot: Heatmap) {
 
@@ -259,21 +321,5 @@ export class NdView {
 
     // heatmapplot.render()
   }
-  // setMousePoint(point: Point) {
-  //   const { x, y } = point
-  //   this.ndcenter.x = Math.floor((x / this.canvasSize.width) * this.store.width);
-  //   this.ndcenter.y = Math.floor((y / this.canvasSize.height) * this.store.height);
-  //   // this.ndcenter = point;
-  // }
-  // setScroll(move: number) {
-  //   //TODO 缩放需要有范围
-  //   //TODO 什么情况下由 canvas switch到 g2plot
-  //   //是否要设置mod，是H,还是V。
-  //   this.ndregion.width += move;
-  //   this.ndregion.height += move;
-  // }
-  // setAxis(axis: AxisType[]): void {
-  //   this.ndaxis = axis
-  // }
 }
 

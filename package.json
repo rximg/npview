@@ -11,20 +11,23 @@
   },
   "dependencies": {
     "@antv/g2plot": "^2.4.20",
-    "@opd/g2plot-vue": "^3.6.4",
     "@vueuse/core": "^9.1.0",
     "ant-design-vue": "^3.2.12",
+    "buffer": "^6.0.3",
+    "cwise": "^1.0.10",
     "lodash": "^4.17.21",
-    "mathjax": "^3.2.2",
     "ndarray": "^1.0.19",
+    "ndarray-fft": "^1.0.3",
     "ndarray-imshow": "^1.0.1",
     "ndarray-ops": "^1.2.2",
+    "ndarray-resample": "^1.0.1",
+    "ndarray-scratch": "^1.2.0",
     "ndarray-unsqueeze": "^1.0.3",
     "npyjs": "^0.4.0",
     "save-pixels": "^2.3.6",
+    "typedarray-pool": "^1.2.0",
     "vue": "^3.2.37",
-    "vue-mathjax": "^0.1.1",
-    "vue-mathjax-next": "^0.0.4"
+    "zeros": "^1.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",

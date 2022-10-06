@@ -1,35 +1,29 @@
 <template>
-  <a-row>
-    <a-col>
+  <div :style="{width:elSize.width+'px',height:elSize.height+'px'}">
+
+    <a-row>
+      <a-col :span="23">
       <div ref="pixShowHandle"></div>
     </a-col>
-    <a-col>
-      <a-slider 
-        id="sliderv" 
-        v-model:value="slider_value.v" 
-        :min="0" 
-        :max="slider_value.v_max" 
-        :reverse="true"
+    <a-col :span="1">
+      <a-slider id="sliderv" v-model:value="slider_value.v" :min="0" :max="slider_value.v_max" :reverse="true"
         :vertical="true" />
     </a-col>
   </a-row>
   <a-row>
     <a-col :span="24">
 
-      <a-slider 
-      id="sliderh" 
-      v-model:value="slider_value.h" 
-      :min="0"
-      :max="slider_value.h_max"
-      :vertical="false" />
+      <a-slider id="sliderh" v-model:value="slider_value.h" :min="0" :max="slider_value.h_max" :vertical="false" />
     </a-col>
-    </a-row>
+  </a-row>
+</div>
 </template>
 
 
 <script lang="ts" setup>
 //TODO  输入的宽高是反的
-import { reactive, onMounted, ref, type Ref ,watchEffect} from "vue"
+//TODO 需要理清宽高
+import { reactive, onMounted, ref, type Ref, watchEffect } from "vue"
 import { NdView } from "../obj/ndaspect"
 import { Heatmap } from '@antv/g2plot'
 import _ from 'lodash'
@@ -37,32 +31,23 @@ import _ from 'lodash'
 const props = defineProps(['inputarr', 'width', 'height'])//TODO 传入的是inputarray，是否需要传入宽高
 // console.log('input data',props.inputarr)
 var heatmapPlot: Heatmap = null
-var ndview_ist = null
+var ndview_ist = props.inputarr
 const pixShowHandle: Ref<HTMLElement> = ref(null)
 const slider_value = reactive(
-  { 
+  {
     v: 0,
-    h: 0, 
-    v_max:0,
-    h_max:0
+    h: 0,
+    v_max: 0,
+    h_max: 0
   }
 )
 
-watchEffect(
-  () => {
-    console.log('watchEffect',slider_value,ndview_ist)
-    const {v,h} = slider_value
-    if (ndview_ist) {
-      ndview_ist.set_region(v,h)
-      ndview_ist.viewAsPix(heatmapPlot)
-    }
-  }
-)
+
 
 const elSize = { width: props.width, height: props.height }
 onMounted(
   () => {
-    ndview_ist = new NdView(props.inputarr, elSize,)
+    // ndview_ist = new NdView(props.inputarr, elSize,)
     slider_value.v_max = ndview_ist.store.shape[0]
     slider_value.h_max = ndview_ist.store.shape[1]
     const data = []
@@ -99,7 +84,18 @@ onMounted(
 
     )
     heatmapPlot.render()
-    ndview_ist.viewAsPix(heatmapPlot)
+    // ndview_ist.viewAsPix(heatmapPlot)
+    watchEffect(
+      () => {
+        // console.log('watchEffect',slider_value,ndview_ist)
+        const { v, h } = slider_value
+        if (ndview_ist) {
+          ndview_ist.set_region(v, h)
+          ndview_ist.viewAsPix(heatmapPlot)
+          // console.log('get thumbnail', ndview_ist.getThumbnail())
+        }
+      }
+    )
   }
 
 )
