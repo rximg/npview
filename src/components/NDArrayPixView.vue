@@ -1,9 +1,8 @@
 <template>
-  <div :style="{width:elSize.width+'px',height:elSize.height+'px'}">
-
+  <div class="main">
     <a-row>
       <a-col :span="23">
-      <div ref="pixShowHandle"></div>
+        <div  class="main" ref="pixShowHandle"></div>
     </a-col>
     <a-col :span="1">
       <a-slider id="sliderv" v-model:value="slider_value.v" :min="0" :max="slider_value.v_max" :reverse="true"
@@ -12,7 +11,6 @@
   </a-row>
   <a-row>
     <a-col :span="24">
-
       <a-slider id="sliderh" v-model:value="slider_value.h" :min="0" :max="slider_value.h_max" :vertical="false" />
     </a-col>
   </a-row>
@@ -27,7 +25,7 @@ import { reactive, onMounted, ref, type Ref, watchEffect } from "vue"
 import { NdView } from "../obj/ndaspect"
 import { Heatmap } from '@antv/g2plot'
 import _ from 'lodash'
-// import { useElementSize } from '@vueuse/core'
+import { useElementSize } from '@vueuse/core'
 const props = defineProps(['inputarr', 'width', 'height'])//TODO 传入的是inputarray，是否需要传入宽高
 // console.log('input data',props.inputarr)
 var heatmapPlot: Heatmap = null
@@ -42,14 +40,17 @@ const slider_value = reactive(
   }
 )
 
+const {width:elWidth,height:elHeight} = useElementSize(pixShowHandle)
 
 
-const elSize = { width: props.width, height: props.height }
 onMounted(
   () => {
+    const elSize = { width: props.width, height: props.height }
+    console.log('heatmap el size',elSize,elHeight.value,elWidth.value)
     // ndview_ist = new NdView(props.inputarr, elSize,)
     slider_value.v_max = ndview_ist.store.shape[0]
     slider_value.h_max = ndview_ist.store.shape[1]
+    ndview_ist.elementSize = elSize
     const data = []
     heatmapPlot = new Heatmap(
       pixShowHandle.value,
@@ -83,7 +84,7 @@ onMounted(
       },
 
     )
-    heatmapPlot.render()
+    // heatmapPlot.render()
     // ndview_ist.viewAsPix(heatmapPlot)
     watchEffect(
       () => {
@@ -105,6 +106,9 @@ onMounted(
 
 </script>
 
-<style>
-
+<style scoped>
+.main {
+  width: 100%;
+  height: 100%;
+}
 </style>

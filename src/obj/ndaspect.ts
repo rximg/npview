@@ -229,15 +229,16 @@ export class NdView {
   drawImage(canvas,elsize) {
     canvas.width=elsize.width
     canvas.height=elsize.height
+    console.log('draw image in canvas',elsize)
     const context = canvas.getContext('2d')
-    const {imel,imwidth,imheight} = this.getImageElement(this.getAspect(),context)
+    const {imel,imwidth,imheight} = this.getImageElement(this.getThumbnail(),context)
     context.clearRect(0, 0, canvas.width, canvas.height)
     // console.log('drawImage',imel,imwidth,imheight,this.scaleShape)
     //https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/drawImage
     context.drawImage(
       imel, //规定要使用的图像、画布或视频。
       0,0,//在画布上放置图像的 x 、y坐标位置。
-      elsize.width, imheight * elsize.height  //要使用的图像的宽度、高度
+      canvas.width, canvas.height  //要使用的图像的宽度、高度
     );
   }
 
