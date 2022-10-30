@@ -48,8 +48,9 @@ onMounted(
     const elSize = { width: props.width, height: props.height }
     console.log('heatmap el size',elSize,elHeight.value,elWidth.value)
     // ndview_ist = new NdView(props.inputarr, elSize,)
-    slider_value.v_max = ndview_ist.store.shape[0]
-    slider_value.h_max = ndview_ist.store.shape[1]
+    const {v_max,h_max} = ndview_ist.get_scroll_region()
+    slider_value.v_max = v_max
+    slider_value.h_max = h_max
     ndview_ist.elementSize = elSize
     const data = []
     heatmapPlot = new Heatmap(

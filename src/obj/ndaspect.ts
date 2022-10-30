@@ -1,12 +1,8 @@
 
 import ndarray from 'ndarray'
 // import ndarray-imshow from 'ndarray-imshow'
-import * as zeros from 'zeros'
-import {resample} from './resample'
 import { Heatmap } from '@antv/g2plot'
-import {assignDataToImagedata} from './formats'
-import {formatRGB,formatNumber,colorRGB} from './formats'
-import { context } from 'ant-design-vue/lib/vc-image/src/PreviewGroup'
+import {assignDataToImagedata,formatRGB,formatNumber,colorRGB} from './formats'
 
 interface Size {
   width: number;
@@ -140,6 +136,16 @@ export class NdView {
     }
   }
 
+  get_scroll_region(){
+    console.log('scroll region',{
+      v_max:this.store.shape[0] - this.elementSize.height / MINSIZES['DEFAULT'].height,
+      h_max:this.store.shape[1] - this.elementSize.width / MINSIZES['DEFAULT'].width
+    })
+    return {
+      v_max:this.store.shape[0] - this.elementSize.height / MINSIZES['DEFAULT'].height,
+      h_max:this.store.shape[1] - this.elementSize.width / MINSIZES['DEFAULT'].width
+    }
+  }
 
   set_region(v:number,h:number):void{
     var {x:start_x,y:start_y} = this.ndregion.start;
@@ -150,12 +156,13 @@ export class NdView {
     end_y = h+this.elementSize.height / MINSIZES['DEFAULT'].height;
     if (end_x > this.store.shape[0]){
       end_x = this.store.shape[0];
-      start_x = end_x - this.elementSize.width;
+      start_x = end_x - this.elementSize.width/ MINSIZES['DEFAULT'].width;
     }
     if (end_y > this.store.shape[1]){
       end_y = this.store.shape[1];
-      start_y = end_y - this.elementSize.height;
+      start_y = end_y - this.elementSize.height/ MINSIZES['DEFAULT'].height;
     }
+
     this.ndregion = {
       start: { x: start_x, y: start_y },
       end: { x: end_x, y: end_y }
@@ -164,7 +171,7 @@ export class NdView {
 
 
   getAspect(): ndarray {
-    const {x:start_x,y:start_y} = this.ndregion.start
+    var {x:start_x,y:start_y} = this.ndregion.start
     const {x:end_x,y:end_y} = this.ndregion.end
     console.log('start end', start_x, start_y, end_x, end_y)
     if (this.channelMode == "GRAY" || this.channelMode == "GRAY_HEATMAP") {
