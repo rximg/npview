@@ -63,7 +63,6 @@ const MINSIZES = {
 }
 
 export class NdView implements NdViewInterface {
-// TODO 图片和canvas尺寸不一致会有bug
   store: ndarray;
   // canvasSize: Size;
   ndcenter: Point;
@@ -262,7 +261,6 @@ export class NdView implements NdViewInterface {
       })
       heatmapplot.changeSize(this.elsize.width,this.elsize.height)
     }else{
-      //TODO 图片需要显示成heatmap。
       for (var i=0;i<ndarr.shape[0];i++){
         for (var j=0;j<ndarr.shape[1];j++){
           data.push({
@@ -281,25 +279,7 @@ export class NdView implements NdViewInterface {
       })
       heatmapplot.changeSize(this.elsize.width,this.elsize.height)
     }
-
-    // heatmapplot.render()
   }
-  // setMousePoint(point: Point) {
-  //   const { x, y } = point
-  //   this.ndcenter.x = Math.floor((x / this.canvasSize.width) * this.store.width);
-  //   this.ndcenter.y = Math.floor((y / this.canvasSize.height) * this.store.height);
-  //   // this.ndcenter = point;
-  // }
-  // setScroll(move: number) {
-  //   //TODO 缩放需要有范围
-  //   //TODO 什么情况下由 canvas switch到 g2plot
-  //   //是否要设置mod，是H,还是V。
-  //   this.ndregion.width += move;
-  //   this.ndregion.height += move;
-  // }
-  // setAxis(axis: AxisType[]): void {
-  //   this.ndaxis = axis
-  // }
 }
 
 

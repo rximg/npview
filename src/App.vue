@@ -2,7 +2,7 @@
 
   <a-layout >
     <a-layout-sider :style="{height:winHeight+'px'}" class='flex-box-sider' >
-      <div  :style="{height:winHeight-210 +'px'}">
+      <div class="hscroll" :style="{height:winHeight-210 +'px'}">
 
         <div v-for="(path,index) in current.list" :key="index">
           <a-button class="box-button" v-on:click="changeCurrentMat(path)"> {{getFilename(path)}}</a-button>
@@ -24,10 +24,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO heatmap: image size/ element size 
-// TODO thumbnail: image size/ element size 
-// TODO heatmap element size 获取到 content size 往下传
-// TODO thumbnail element size 获取到 sider的size的宽，高度固定一个数值：h。
+// TODO 优化单个格子的大小
 // import { VueMathjax } from 'vue-mathjax-next'
 // import HelloWorld from './components/HelloWorld.vue'
 // import TheWelcome from './components/TheWelcome.vue'
@@ -44,6 +41,19 @@ let n = new npyjs();
 const imageShowHandle: Ref<HTMLCanvasElement> = ref(null)
 const contentHandle: Ref<HTMLCanvasElement> = ref(null)
 var test_list = [
+  "data/zero.npy",
+  "data/zero255.npy",
+  "data/12.npy",
+  "data/text.npy",
+
+  "data/zero.npy",
+  "data/zero255.npy",
+  "data/12.npy",
+  "data/text.npy",
+  "data/zero.npy",
+  "data/zero255.npy",
+  "data/12.npy",
+  "data/text.npy",
   "data/zero.npy",
   "data/zero255.npy",
   "data/12.npy",
@@ -137,4 +147,30 @@ function getFilename(path:string){
   margin-bottom: 8px;
   width: 93%;
 }
+
+.hscroll{
+  overflow: hidden;
+  overflow-y: scroll; 
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+::-webkit-scrollbar-button {
+    display: none;
+  }
+::-webkit-scrollbar-thumb {
+    background: rgba(144, 147, 153, 0.3);
+    cursor: pointer;
+    border-radius: 4px;
+  }
+::-webkit-scrollbar-corner {
+    display: none;
+  }
+::-webkit-resizer {
+    display: none;
+  }
+
+
 </style>

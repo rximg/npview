@@ -33,3 +33,5 @@ src.zip
 package-lock.json
 zero.npy
 zero255.npy
+read.py
+text.bmp

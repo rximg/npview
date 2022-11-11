@@ -49,7 +49,6 @@ const MINSIZES = {
 }
 
 export class NdView {
-  // TODO 图片和canvas尺寸不一致会有bug
   store: ndarray;
   ndregion: Region;
   elementSize: Size;
@@ -137,14 +136,12 @@ export class NdView {
   }
 
   get_scroll_region(){
-    console.log('scroll region',{
-      v_max:this.store.shape[0] - this.elementSize.height / MINSIZES['DEFAULT'].height,
-      h_max:this.store.shape[1] - this.elementSize.width / MINSIZES['DEFAULT'].width
-    })
-    return {
+    const region = {
       v_max:this.store.shape[0] - this.elementSize.height / MINSIZES['DEFAULT'].height,
       h_max:this.store.shape[1] - this.elementSize.width / MINSIZES['DEFAULT'].width
     }
+    console.log('scroll region',region)
+    return region
   }
 
   set_region(v:number,h:number):void{
@@ -299,7 +296,6 @@ export class NdView {
       })
       // heatmapplot.changeSize(this.elsize.width, this.elsize.height)
     } else {
-      //TODO 图片需要显示成heatmap。
       for (var i = 0; i < ndarr.shape[0]; i++) {
         for (var j = 0; j < ndarr.shape[1]; j++) {
           data.push({
