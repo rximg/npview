@@ -45,19 +45,10 @@ var test_list = [
   "data/zero255.npy",
   "data/12.npy",
   "data/text.npy",
+  "data/mini.npy",
+  "data/minigray.npy",
+  "data/cross.npy"
 
-  "data/zero.npy",
-  "data/zero255.npy",
-  "data/12.npy",
-  "data/text.npy",
-  "data/zero.npy",
-  "data/zero255.npy",
-  "data/12.npy",
-  "data/text.npy",
-  "data/zero.npy",
-  "data/zero255.npy",
-  "data/12.npy",
-  "data/text.npy",
 ]
 console.log('window input',window)
 if (window.input){

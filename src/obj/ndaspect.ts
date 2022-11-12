@@ -23,17 +23,17 @@ type Region = {
   end: Point
 }
 
-interface ImageSize {
-  imgX: number;
-  imgY: number;
-  imgScale: number;
-}
+// interface ImageSize {
+//   imgX: number;
+//   imgY: number;
+//   imgScale: number;
+// }
 
-interface ImageEl {
-  imel: HTMLCanvasElement
-  imwidth: number
-  imheight: number
-}
+// interface ImageEl {
+//   imel: HTMLCanvasElement
+//   imwidth: number
+//   imheight: number
+// }
 
 
 type AxisType = {
@@ -44,7 +44,11 @@ type AxisType = {
 const MINSIZES = {
   "DEFAULT": {
     width: 32,
-    height: 32,
+    height: 16,
+  },
+  "RGB":{
+    width: 32,
+    height: 36,
   }
 }
 
@@ -52,23 +56,29 @@ export class NdView {
   store: ndarray;
   ndregion: Region;
   elementSize: Size;
+  step:Size;
   ndaxis: AxisType[];
+  aspectShape:Size;
   channelMode: "LINE" | "GRAY" | "GRAY_HEATMAP" | "RGB" | "HWC" | "BCHW" | "XCHW" = "RGB";
+  sizeMode:"DEFAULT"|"RGB"="RGB";
 
   constructor(store: ndarray, elsize: Size,) {
     this.store = store;
+    
     this.ndaxis = []
+    this.aspectShape={width:0,height:0}
     // this.minPixSize = minPixSize;
     this.elementSize = elsize
     this.ndregion = {
       start: { x: 0, y: 0 },
       end: { x: 0, y: 0 },
     }
-
+    this.step = {width:0,height:0}
     this.preprocessND(this.store)
     // this.canvasInfo = {
     //   mousePos :{x:0,y:0},
     // }
+    console.log('preprocessND',this.store.shape, this.aspectShape, this.ndregion,this.channelMode,this.step)
   }
 
   preprocessND(nd: ndarray): ndarray {
@@ -101,6 +111,7 @@ export class NdView {
       if (dtype == "uint8" && nd.shape[2] == 3) {
         this.channelMode = "RGB"
       } else {
+        //TODO 需要添加通道选择的功能。
         this.channelMode = "HWC"
         this.ndaxis.push({ name: "c", value: 0 })
       }
@@ -123,42 +134,60 @@ export class NdView {
       height = shape[2]
       width = shape[3]
     }
-    console.log(`preprocessND ${shape} ${dtype} ${this.channelMode}`)
+    if (this.channelMode == "RGB"){
+      this.sizeMode = 'RGB'
+    }else{
+      this.sizeMode = 'DEFAULT'
+    }
     // this.ndregion = { width: width, height: height }
     // this.ndcenter = { x: width / 2, y: height / 2 }
-    this.ndregion = {
-      start: { x: 0, y: 0 },
-      end: {
-        x: this.elementSize.width / MINSIZES['DEFAULT'].width,
-        y: this.elementSize.height / MINSIZES['DEFAULT'].height
-      }
+    this.aspectShape = {
+      width:width,
+      height:height
     }
+    // const stepx = Math.ceil(this.elementSize.width / MINSIZES['DEFAULT'].width);
+    // const stepy = Math.ceil(this.elementSize.height / MINSIZES['DEFAULT'].height);
+    // this.step = {width:stepx,height:stepy}    
+    // this.ndregion = {
+    //   start: { x: 0, y: 0 },
+    //   end: {
+    //     x: stepx,
+    //     y: stepy
+    //   }
+    // }
   }
 
   get_scroll_region(){
+    const stepx = Math.ceil(this.elementSize.width / MINSIZES[this.sizeMode].width);
+    const stepy = Math.ceil(this.elementSize.height / MINSIZES[this.sizeMode].height);
+    this.step = {width:stepx,height:stepy}   
     const region = {
-      v_max:this.store.shape[0] - this.elementSize.height / MINSIZES['DEFAULT'].height,
-      h_max:this.store.shape[1] - this.elementSize.width / MINSIZES['DEFAULT'].width
+      v_max:this.aspectShape.height - stepy,
+      h_max:this.aspectShape.width - stepx
     }
-    console.log('scroll region',region)
+    console.log('scroll region',this.aspectShape,this.step,region)
     return region
   }
 
   set_region(v:number,h:number):void{
-    var {x:start_x,y:start_y} = this.ndregion.start;
-    var {x:end_x,y:end_y} = this.ndregion.end;
-    start_x = v;
-    start_y = h;
-    end_x = v+this.elementSize.width / MINSIZES['DEFAULT'].width;
-    end_y = h+this.elementSize.height / MINSIZES['DEFAULT'].height;
-    if (end_x > this.store.shape[0]){
-      end_x = this.store.shape[0];
-      start_x = end_x - this.elementSize.width/ MINSIZES['DEFAULT'].width;
-    }
-    if (end_y > this.store.shape[1]){
-      end_y = this.store.shape[1];
-      start_y = end_y - this.elementSize.height/ MINSIZES['DEFAULT'].height;
-    }
+    const {height,width} = this.aspectShape
+    const stepx = Math.round(this.elementSize.width / MINSIZES[this.sizeMode].width);
+    const stepy = Math.round(this.elementSize.height / MINSIZES[this.sizeMode].height);
+    this.step = {width:stepx,height:stepy}   
+    // var {x:start_x,y:start_y} = this.ndregion.start;
+    // var {x:end_x,y:end_y} = this.ndregion.end;
+    var start_y = v;
+    var start_x = h;
+    var end_y = v+stepy;
+    var end_x = h+stepx;
+    // if (end_x > width){
+    //   end_x = width;
+    //   start_x = end_x - stepx;
+    // }
+    // if (end_y > height){
+    //   end_y = height;
+    //   start_y = end_y - stepy;
+    // }
 
     this.ndregion = {
       start: { x: start_x, y: start_y },
@@ -168,20 +197,20 @@ export class NdView {
 
 
   getAspect(): ndarray {
-    var {x:start_x,y:start_y} = this.ndregion.start
+    const {x:start_x,y:start_y} = this.ndregion.start
     const {x:end_x,y:end_y} = this.ndregion.end
-    console.log('start end', start_x, start_y, end_x, end_y)
+    console.log('start end', start_x, start_y, end_x, end_y,this.step)
     if (this.channelMode == "GRAY" || this.channelMode == "GRAY_HEATMAP") {
-      return this.store.hi(end_x, end_y).lo(start_x, start_y)
+      return this.store.hi(end_y, end_x).lo(start_y, start_x)
     } else if (this.channelMode == "RGB") {
-      return this.store.hi(end_x, end_y).lo(start_x, start_y)
+      return this.store.hi(end_y, end_x).lo(start_y, start_x)
     } else if (this.channelMode == "HWC") {
-      return this.store.hi(end_x, end_y).lo(start_x, start_y).pick(null, null, this.ndaxis[0].value)
+      return this.store.hi(end_y, end_x).lo(start_y, start_x).pick(null, null, this.ndaxis[0].value)
     } else if (this.channelMode == "BCHW") {
-      return this.store.hi(end_x, end_y).lo(start_x, start_y).pick(this.ndaxis[0].value, null, null, null)
+      return this.store.hi(end_y, end_x).lo(start_y, start_x).pick(this.ndaxis[0].value, null, null, null)
     } else if (this.channelMode == "XCHW") {
       const axis = this.ndaxis.map(axis => axis.value)
-      return this.store.hi(end_x, end_y).lo(start_x, start_y).pick(...axis)
+      return this.store.hi(end_y, end_x).lo(start_y, start_x).pick(...axis)
     } else {
       throw new Error(`unsupport channel mode ${this.channelMode}`)
     }
@@ -203,6 +232,8 @@ export class NdView {
     } else {
       throw new Error(`unsupport channel mode ${this.channelMode}`)
     }
+    //TODO 0~255需要heatmap
+    aspect = aspect.transpose(1, 0)
     // var resize = zeros([this.elementSize.width, this.elementSize.height])
     // resample(resize,aspect)
     return aspect
@@ -266,8 +297,8 @@ export class NdView {
           const b = ndarr.pick(null, null, 2).get(i, j)
           const mean = (r + g + b) / 3
           data.push({
-            x: i.toString(),
-            y: j.toString(),
+            x: j.toString(),
+            y: i.toString(),
             rgb:{
               r: r,
               g: g,
@@ -299,8 +330,8 @@ export class NdView {
       for (var i = 0; i < ndarr.shape[0]; i++) {
         for (var j = 0; j < ndarr.shape[1]; j++) {
           data.push({
-            x: i.toString(),
-            y: j.toString(),
+            x: j.toString(),
+            y: i.toString(),
             value: ndarr.get(i, j)
           })
         }

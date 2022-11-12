@@ -228,7 +228,7 @@ export class NdView implements NdViewInterface {
     const data:HeatMapValue[] = []//iter ndarray
     // this.getAspect().
     const {imgX,imgY,imgScale} = this.scaleShape;
-    const {imel,imwidth,imheight} = this.imageEl
+    const {imwidth,imheight} = this.imageEl
 
     this.ndregion = { width: imwidth/imgScale, height: imheight/imgScale }
     this.ndcenter = { x: (-imgX+imwidth/2)/imgScale, y: (-imgY+imheight/2) / imgScale }
@@ -242,8 +242,8 @@ export class NdView implements NdViewInterface {
           const b = ndarr.pick(null,null,2).get(i,j)
           const mean = (r+g+b)/3
           data.push({
-            x:i.toString(),
-            y:j.toString(),
+            x:j.toString(),
+            y:i.toString(),
             r:r,
             g:g,
             b:b,
@@ -264,8 +264,8 @@ export class NdView implements NdViewInterface {
       for (var i=0;i<ndarr.shape[0];i++){
         for (var j=0;j<ndarr.shape[1];j++){
           data.push({
-            x:i.toString(),
-            y:j.toString(),
+            x:j.toString(),
+            y:i.toString(),
             value:ndarr.get(i,j)
           })
         }

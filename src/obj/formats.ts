@@ -36,7 +36,7 @@ export function formatNumber(data:HeatMapValue) {
     if (isDot(value)){
         return `${data.value.toPrecision(2)}`
     }
-    if (value>0 && value<255){
+    if (value>0 && value<256){
         return `${data.value}`
     }else{
         return `${data.value.toPrecision(2)}`

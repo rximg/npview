@@ -35,3 +35,9 @@ zero.npy
 zero255.npy
 read.py
 text.bmp
+TEST.ipynb
+.gitignore
+data/cross.npy
+data/mini.npy
+data/minigray.npy
+src/obj/ndaspect.ts

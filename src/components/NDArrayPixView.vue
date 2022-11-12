@@ -46,10 +46,10 @@ onMounted(
     const elSize = { width: props.width, height: props.height }
     console.log('heatmap el size', elSize, elHeight.value, elWidth.value)
     // ndview_ist = new NdView(props.inputarr, elSize,)
-    const { v_max, h_max } = ndview_ist.get_scroll_region()
-    slider_value.v_max = h_max
-    slider_value.h_max = v_max
     ndview_ist.elementSize = elSize
+    const { v_max, h_max } = ndview_ist.get_scroll_region()
+    slider_value.v_max = v_max
+    slider_value.h_max = h_max
     const data = []
     heatmapPlot = new Heatmap(
       pixShowHandle.value,
@@ -90,7 +90,7 @@ onMounted(
         // console.log('watchEffect',slider_value,ndview_ist)
         const { v, h } = slider_value
         if (ndview_ist) {
-          ndview_ist.set_region(h, v)
+          ndview_ist.set_region(v, h)
           ndview_ist.viewAsPix(heatmapPlot)
           // console.log('get thumbnail', ndview_ist.getThumbnail())
         }
